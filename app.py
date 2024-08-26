@@ -1,7 +1,5 @@
-pip install Flask requests beautifulsoup4 numpy pandas matplotlib geopy
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from geopy.distance import geodesic
 import requests
@@ -20,7 +18,6 @@ class Ship:
         self.safety_threshold = safety_threshold
 
 def get_weather_data(lat, lon):
-    # Example simplified weather data for demo purposes
     return {'currents': 0.5, 'waves': 2.0, 'wind_speed': 5.0}
 
 def haversine_distance(coord1, coord2):
@@ -77,20 +74,6 @@ def adjust_route(route, ship):
             adjusted_route.append(alternative)
     return adjusted_route
 
-def plot_route(route):
-    latitudes, longitudes = zip(*route)
-    plt.figure(figsize=(8, 6))
-    plt.plot(longitudes, latitudes, marker='o', color='blue', linestyle='-')
-    plt.title('Optimal Ship Route')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.grid()
-    # Save plot to a string buffer
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    return base64.b64encode(buf.getvalue()).decode('utf-8')
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -105,8 +88,7 @@ def find_route():
     initial_route = astar_search(start, goal, ship)
     if initial_route:
         final_route = adjust_route(initial_route, ship)
-        plot_data = plot_route(final_route)
-        return jsonify({'status': 'success', 'initial_route': initial_route, 'final_route': final_route, 'plot': plot_data})
+        return jsonify({'status': 'success', 'initial_route': initial_route, 'final_route': final_route})
     else:
         return jsonify({'status': 'failure', 'message': 'No route found'})
 
