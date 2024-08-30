@@ -27,5 +27,47 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="main.js"></script>
+    <!-- Adding PyScript -->
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-script>
+        import math
+
+        def haversine_distance(lat1, lon1, lat2, lon2):
+            # Convert latitude and longitude from degrees to radians
+            lat1 = math.radians(lat1)
+            lon1 = math.radians(lon1)
+            lat2 = math.radians(lat2)
+            lon2 = math.radians(lon2)
+            
+            # Haversine formula
+            dlon = lon2 - lon1
+            dlat = lat2 - lat1
+            a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+            c = 2 * math.asin(math.sqrt(a))
+            
+            # Radius of Earth in kilometers. Use 3956 for miles. Determines return value units.
+            r = 6371
+            
+            # Calculate the result
+            return c * r
+
+        def calculate_route(event):
+            event.preventDefault()
+            # Get input values
+            start_lat = float(Element("start_lat").element.value)
+            start_lon = float(Element("start_lon").element.value)
+            goal_lat = float(Element("goal_lat").element.value)
+            goal_lon = float(Element("goal_lon").element.value)
+
+            # Calculate distance
+            distance = haversine_distance(start_lat, start_lon, goal_lat, goal_lon)
+            result = f"Calculated Distance: {distance:.2f} km"
+            
+            # Display result
+            Element("result").element.innerText = result
+
+        # Add event listener to the form
+        Element("route-form").element.onsubmit = calculate_route
+    </py-script>
 </body>
 </html>
