@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('route-form');
-    const map = L.map('map').setView([0, 0], 2);
+const map = L.map('map').setView([0, 0], 2);
 
-    // Initialize the tile layer for the map
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+// Initialize the tile layer using the MapTiler API
+L.tileLayer('https://api.maptiler.com/maps/90ff64bc-21c1-4411-b097-e94e650f830b/{z}/{x}/{y}.png?key=69jYll8wi5XxqCSZsdDs', {
+    attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a>'
+}).addTo(map);
 
     // Event listener for form submission
     form.addEventListener('submit', async (event) => {
