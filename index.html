@@ -3,71 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ship Route Finder</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>Optimal Ship Routing</title>
     <link rel="stylesheet" href="styles.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Ship Route Finder</h1>
-        <form id="route-form">
-            <label for="start_lat">Start Latitude:</label>
-            <input type="number" id="start_lat" placeholder="Enter start latitude" required>
-            <label for="start_lon">Start Longitude:</label>
-            <input type="number" id="start_lon" placeholder="Enter start longitude" required>
-            <label for="goal_lat">Goal Latitude:</label>
-            <input type="number" id="goal_lat" placeholder="Enter goal latitude" required>
-            <label for="goal_lon">Goal Longitude:</label>
-            <input type="number" id="goal_lon" placeholder="Enter goal longitude" required>
-            <button type="submit">Find Route</button>
-        </form>
-        <div id="result" class="result"></div>
-        <div id="map" class="map"></div>
-    </div>
+    <header>
+        <h1>Optimal Ship Routing</h1>
+    </header>
+    <main>
+        <section id="route-planner">
+            <h2>Select Forecast Service</h2>
+            <select id="serviceType">
+                <option value="Location Specific Forecast">Location Specific Forecast</option>
+                <option value="Forecast for the Islands">Forecast for the Islands</option>
+                <option value="Coastal Forecast">Coastal Forecast</option>
+                <option value="Deep Sea Forecast">Deep Sea Forecast</option>
+                <option value="Indian Ocean Forecast">Indian Ocean Forecast</option>
+                <option value="Global Forecast">Global Forecast</option>
+                <option value="Forecast along Ship Tracks">Forecast along Ship Tracks</option>
+                <option value="Webmap Services">Webmap Services</option>
+                <option value="Port and Harbour Forecast">Port and Harbour Forecast</option>
+                <option value="Forecast for Maldives">Forecast for Maldives</option>
+                <option value="Oil Spill Advisories">Oil Spill Advisories</option>
+                <option value="High Wave Alert Services">High Wave Alert Services</option>
+                <option value="Search and Rescue Operations">Search and Rescue Operations</option>
+                <option value="Inland Vessel Limits">Inland Vessel Limits</option>
+            </select>
+            <button id="calculateButton">Calculate Optimal Route</button>
+        </section>
+        <section id="result">
+            <h2>Optimal Route</h2>
+            <pre id="output">Select a service and click "Calculate Optimal Route" to see the result.</pre>
+        </section>
+    </main>
+    <footer>
+        <p>© 2024 Optimal Ship Routing System</p>
+    </footer>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="main.js"></script>
-    <!-- Adding PyScript -->
-    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
     <py-script>
-        import math
+        import random
+        import numpy as np
 
-        def haversine_distance(lat1, lon1, lat2, lon2):
-            # Convert latitude and longitude from degrees to radians
-            lat1 = math.radians(lat1)
-            lon1 = math.radians(lon1)
-            lat2 = math.radians(lat2)
-            lon2 = math.radians(lon2)
-            
-            # Haversine formula
-            dlon = lon2 - lon1
-            dlat = lat2 - lat1
-            a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-            c = 2 * math.asin(math.sqrt(a))
-            
-            # Radius of Earth in kilometers. Use 3956 for miles. Determines return value units.
-            r = 6371
-            
-            # Calculate the result
-            return c * r
+        services = {
+            "Location Specific Forecast": {"duration_days": 3, "frequency_hours": 3},
+            "Forecast for the Islands": {"duration_days": 7, "frequency_hours": 3},
+            "Coastal Forecast": {"duration_days": 7, "frequency_hours": 3},
+            "Deep Sea Forecast": {"duration_days": 7, "frequency_hours": 3},
+            "Indian Ocean Forecast": {"duration_days": 5, "frequency_hours": 6},
+            "Global Forecast": {"duration_days": 5, "frequency_hours": 6},
+            "Forecast along Ship Tracks": {"duration_days": 3, "frequency_hours": 6},
+            "Webmap Services": {"duration_days": 7, "frequency_hours": 6},
+            "Port and Harbour Forecast": {"duration_days": 2, "frequency_hours": 3},
+            "Forecast for Maldives": {"duration_days": 3, "frequency_hours": 3},
+            "Oil Spill Advisories": {"duration_days": 3, "frequency_hours": 3},
+            "High Wave Alert Services": {"duration_days": 2, "frequency_hours": 3},
+            "Search and Rescue Operations": {"duration_days": 1, "frequency_hours": 1},  # Assumed
+            "Inland Vessel Limits": {"duration_days": 1, "frequency_hours": 3}
+        }
 
-        def calculate_route(event):
-            event.preventDefault()
-            # Get input values
-            start_lat = float(Element("start_lat").element.value)
-            start_lon = float(Element("start_lon").element.value)
-            goal_lat = float(Element("goal_lat").element.value)
-            goal_lon = float(Element("goal_lon").element.value)
+        def get_weather_data(service_type):
+            duration_days = services[service_type]["duration_days"]
+            frequency_hours = services[service_type]["frequency_hours"]
+            time_steps = int((duration_days * 24) / frequency_hours)
+            grid_size = 10
+            weather_data = {
+                'wind_speed': np.random.rand(grid_size, grid_size, time_steps),
+                'current_speed': np.random.rand(grid_size, grid_size, time_steps),
+                'wave_height': np.random.rand(grid_size, grid_size, time_steps)
+            }
+            return weather_data
 
-            # Calculate distance
-            distance = haversine_distance(start_lat, start_lon, goal_lat, goal_lon)
-            result = f"Calculated Distance: {distance:.2f} km"
-            
-            # Display result
-            Element("result").element.innerText = result
+        def calculate_fuel_consumption(route, weather_data):
+            fuel_consumption = 0.0
+            for point in route:
+                wind_speed = weather_data['wind_speed'][point[0], point[1], 0]
+                current_speed = weather_data['current_speed'][point[0], point[1], 0]
+                wave_height = weather_data['wave_height'][point[0], point[1], 0]
+                fuel_consumption += wind_speed + current_speed + wave_height
+            return fuel_consumption
 
-        # Add event listener to the form
-        Element("route-form").element.onsubmit = calculate_route
+        def initial_population(pop_size, grid_size):
+            population = []
+            for _ in range(pop_size):
+                route = [(random.randint(0, grid_size - 1), random.randint(0, grid_size - 1)) for _ in range(10)]
+                population.append(route)
+            return population
+
+        def fitness(route, weather_data):
+            fuel = calculate_fuel_consumption(route, weather_data)
+            return 1.0 / (fuel + 1)
+
+        def crossover(route1, route2):
+            point = random.randint(1, len(route1) - 1)
+            return route1[:point] + route2[point:]
+
+        def mutate(route, grid_size):
+            point = random.randint(0, len(route) - 1)
+            route[point] = (random.randint(0, grid_size - 1), random.randint(0, grid_size - 1))
+
+        def genetic_algorithm(grid_size, weather_data, generations=100, pop_size=20):
+            population = initial_population(pop_size, grid_size)
+            for generation in range(generations):
+                population = sorted(population, key=lambda x: fitness(x, weather_data), reverse=True)
+                new_population = population[:2]
+                for _ in range(pop_size // 2 - 1):
+                    parent1 = random.choice(population[:10])
+                    parent2 = random.choice(population[:10])
+                    child = crossover(parent1, parent2)
+                    if random.random() < 0.1:
+                        mutate(child, grid_size)
+                    new_population.append(child)
+                population = new_population
+            return population[0]
+
+        def on_button_click(event):
+            service_type = Element('serviceType').value
+            weather_data = get_weather_data(service_type)
+            optimal_route = genetic_algorithm(10, weather_data)
+            output = "Optimal Route:\n" + "\n".join(map(str, optimal_route))
+            Element('output').write(output)
+
+        Element('calculateButton').element.onclick = on_button_click
     </py-script>
 </body>
 </html>
